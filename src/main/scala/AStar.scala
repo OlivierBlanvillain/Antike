@@ -4,7 +4,11 @@ import scala.collection.immutable.TreeSet
 import annotation.tailrec
 
 object AStar {
-  def search[A](start: A)(goal: A => Boolean)(next: A => List[A])(h: A => Int)(implicit o: Ordering[A]): List[A] = {
+  def search[A](start: A)(next: A => List[A])(h: A => Int)(implicit o: Ordering[A]): List[A] = {
+    searchWithGoal(start)(h andThen 0.==)(next)(h)  
+  }
+  
+  def searchWithGoal[A](start: A)(goal: A => Boolean)(next: A => List[A])(h: A => Int)(implicit o: Ordering[A]): List[A] = {
     @tailrec
     def search0(pq: TreeSet[(Int, (A, Int))], seen: Set[A], gscore: Map[A, Int], tracks: Map[A, A]): List[A] = {
       pq.headOption.map(_._2) match {

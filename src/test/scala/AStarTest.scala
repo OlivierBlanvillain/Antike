@@ -17,7 +17,7 @@ object AStarTest extends Properties(AStar.getClass.toString) {
     ((a._1 - b._1).abs max (a._2 - b._2).abs) / 2
   
   def knightsShortestPath(init: Square, goal: Square): List[Square] =
-    AStar.search(init)(goal.==)(nextKnightPos)(mkHeuristic(goal))
+    AStar.searchWithGoal(init)(goal.==)(nextKnightPos)(mkHeuristic(goal))
   
   def bfs[A](start: A)(goal: A => Boolean)(next: A => List[A]): List[A] = {
     def bfs0(queue: Queue[A], seen: Set[A], tracks: Map[A, A]): List[A] = {
