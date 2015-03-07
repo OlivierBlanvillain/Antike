@@ -14,10 +14,10 @@ object AStarTest extends Properties(AStar.getClass.toString) {
   }
   
   def mkHeuristic(a: Square)(b: Square): Int =
-    ((a._1 - b._1).abs max (a._2 - b._2).abs) / 2
+    if(a == b) 0 else 1 + ((a._1 - b._1).abs max (a._2 - b._2).abs) / 2
   
   def knightsShortestPath(init: Square, goal: Square): List[Square] =
-    AStar.searchWithGoal(init)(goal.==)(nextKnightPos)(mkHeuristic(goal))
+    AStar.searchAll(init)(nextKnightPos)(mkHeuristic(goal)).headOption.getOrElse(Nil)
   
   def bfs[A](start: A)(goal: A => Boolean)(next: A => List[A]): List[A] = {
     def bfs0(queue: Queue[A], seen: Set[A], tracks: Map[A, A]): List[A] = {

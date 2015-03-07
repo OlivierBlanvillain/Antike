@@ -13,13 +13,11 @@ object Antike extends App {
   val initRessouce = Ressource(amount = 3, cities = 1, temples = 0)
   val initState = State(0, 0, 0, 0, initRessouce, initRessouce, initRessouce, InitialWS)
 
-  // val moves = List(Bellona, Marble, Movement1, TempleM, Gold, CityM, Marble, TempleM, Marble, CityM, Movement1, TempleM, Marble, CityM, TempleM, Marble, TempleG, TempleI) // 15: Temple      5,0,1 1,-6 1:1A 6T 6C
-
   def isLegal(s: State) =
     s.coins >= 0 && s.actives >= 0 &&
     s.marble.amount + s.iron.amount + s.gold.amount + s.coins + s.fees >= 0 &&
     s.marble.cities >= s.marble.temples && s.iron.cities >= s.iron.temples && s.gold.cities >= s.gold.temples
-  val allMoves = List(Marble, Iron, Gold, Movement1, Movement2, TempleM, TempleI, Bellona, CityM, CityI)
+  val allMoves = List(Marble, Iron, Gold, Movement1, Movement2, TempleG, TempleM, TempleM2, TempleM3, TempleI, TempleI2, TempleI3, Bellona, CityM, CityI)
   def nextMoves(s: State) = allMoves map (_(s)) filter isLegal
   
   def templesWanted(n: Int, r: Lens[State, Ressource])(s: State): Int = {
@@ -31,9 +29,18 @@ object Antike extends App {
     templesNeeded + cityNeeded + activesNeeded
   }
 
-  // val preComputed = moves.scanLeft(initState)((state, move) => move(state))
-  val states = AStar.search(initState)(nextMoves)(templesWanted(4, marble))
-  println(showGame(states))
+  // val moves = List(Bellona, Movement1, CityM, Gold, CityM, Marble, Iron, Movement2, CityM, Marble, TempleM2)
+  val moves = List(Bellona, Movement1, CityM, Gold, CityM, Marble, TempleM, Marble, TempleM, Marble, TempleM)
+
+  // val intermediate = moves.scanLeft(initState)((state, move) => move(state))
+  val allStates = AStar.searchAll(initState)(nextMoves) { s =>
+  // val allStates = AStar.searchAll(intermediate.last)(nextMoves) { s =>
+    templesWanted(4, marble)(s)
+  }
+  allStates.foreach(s => println(showGame(s)))
+  
+  println()
+  allStates.map(_.last).foreach(s => println(showState(s)))
   
   def showGame(states: List[State]): String = {
     // val turns = states
@@ -56,6 +63,7 @@ object Antike extends App {
       ${actives}:${idles}A
       ${marble.temples + iron.temples + gold.temples}T
       ${marble.cities + iron.cities + gold.cities}C
+      (${marble.amount + iron.amount + gold.amount + coins + fees})
     """ split "\n" map (_.trim) mkString " "
   }
 }
