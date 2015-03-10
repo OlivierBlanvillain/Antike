@@ -41,11 +41,11 @@ class Move(val ws: WheelState, val action: State => State) {
 }
 
 object Moves {
-  def collect(ressource: Lens[State, Ressource]): State => State = chain(
+  def collect(ressource: RessourceLens): State => State = chain(
     ressource.modify(r => amount.modify(_ + r.cities + 2 * r.temples)(r)),
     coins.modify(_ + 1))
   
-  def spend(amountSpent: Int, ressource: Lens[State, Ressource]): State => State = { s =>
+  def spend(amountSpent: Int, ressource: RessourceLens): State => State = { s =>
     val initialAmount = ressource composeLens amount get s
     val newAmount = 0 max (initialAmount - amountSpent)
     val initialCoins = s.coins
@@ -57,7 +57,7 @@ object Moves {
   def untilBroke(m: State => State): State => State = s =>
     if(m(s).coins < 0) s else untilBroke(m)(m(s))
   
-  def buildCity(ressource: Lens[State, Ressource]): State => State = chain(
+  def buildCity(ressource: RessourceLens): State => State = chain(
     ressource composeLens cities modify (_ + 1),
     spend(1, marble),
     spend(1, iron),
@@ -65,7 +65,7 @@ object Moves {
     actives.modify(_ - 1),
     idles.modify(_ + 1))
   
-  def buildTemple(ressource: Lens[State, Ressource]): State => State = chain(
+  def buildTemple(ressource: RessourceLens): State => State = chain(
     ressource composeLens temples modify (_ + 1),
     spend(5, marble))
   
@@ -113,4 +113,5 @@ object Utils {
   implicit val ressourceOrdering: Ordering[Ressource] = Ordering.by(Ressource unapply _)
   implicit val stateOrdering: Ordering[State] = Ordering.by(State unapply _)
   def chain[A](f: A => A*) = Function.chain(f)
+  type RessourceLens = Lens[State, Ressource]
 }

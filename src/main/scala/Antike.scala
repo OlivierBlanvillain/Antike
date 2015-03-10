@@ -13,14 +13,18 @@ object Antike extends App {
   val initRessouce = Ressource(amount = 3, cities = 1, temples = 0)
   val initState = State(0, 0, 0, 0, initRessouce, initRessouce, initRessouce, InitialWS)
 
-  def isLegal(s: State) =
-    s.coins >= 0 && s.actives >= 0 &&
-    s.marble.amount + s.iron.amount + s.gold.amount + s.coins + s.fees >= 0 &&
-    s.marble.cities >= s.marble.temples && s.iron.cities >= s.iron.temples && s.gold.cities >= s.gold.temples
-  val allMoves = List(Marble, Iron, Gold, Movement1, Movement2, TempleG, TempleM, TempleM2, TempleM3, TempleI, TempleI2, TempleI3, Bellona, CityM, CityI)
-  def nextMoves(s: State) = allMoves map (_(s)) filter isLegal
+  val allMoves = List(Marble, Iron, Gold, Movement1, Movement2, Science, TempleG, TempleM, TempleM2, TempleM3, TempleI, TempleI2, TempleI3, Bellona, CityM, CityI)
   
-  def templesWanted(n: Int, r: Lens[State, Ressource])(s: State): Int = {
+  def balance(s: State): Int =
+    s.marble.amount + s.iron.amount + s.gold.amount + s.coins + s.fees
+    
+  def nextMoves(s: State) = {
+    def t(r: RessourceLens)(n: State): Boolean = (r composeLens cities get n) >= (r composeLens temples get n)
+    val conditions: List[State => Boolean] = List(_.coins >= 0, _.actives >= 0, balance(_) >= 0, t(marble), t(iron), t(gold))
+    allMoves map (_(s)) filter (n => conditions forall (_(n)))
+  }
+  
+  def templesWanted(n: Int, r: RessourceLens)(s: State): Int = {
     val currentCities = r composeLens cities get s
     val currentTemples = r composeLens temples get s
     val templesNeeded = 0 max (n - currentCities)
@@ -30,17 +34,15 @@ object Antike extends App {
   }
 
   // val moves = List(Bellona, Movement1, CityM, Gold, CityM, Marble, Iron, Movement2, CityM, Marble, TempleM2)
-  val moves = List(Bellona, Movement1, CityM, Gold, CityM, Marble, TempleM, Marble, TempleM, Marble, TempleM)
+  // val moves = List(Bellona, Movement1, CityM, Gold, CityM, Marble, TempleM, Marble, TempleM, Marble, TempleM)
+  // val moves = List(Bellona, Movement1, CityM, Gold, CityM, Marble, Iron, Movement2, CityM, Marble, TempleM2)
 
   // val intermediate = moves.scanLeft(initState)((state, move) => move(state))
-  val allStates = AStar.searchAll(initState)(nextMoves) { s =>
-  // val allStates = AStar.searchAll(intermediate.last)(nextMoves) { s =>
-    templesWanted(4, marble)(s)
-  }
-  allStates.foreach(s => println(showGame(s)))
-  
-  println()
-  allStates.map(_.last).foreach(s => println(showState(s)))
+  // val allStates = AStar.searchAll(intermediate.last)(nextMoves) { templesWanted(3, marble) }
+  // allStates.foreach(s => println(showGame(intermediate ::: s.tail)))
+
+  val allStates = AStar.searchAll(initState)(nextMoves)(templesWanted(3, marble))
+  allStates.foreach(s => println(showGame(s.tail)))
   
   def showGame(states: List[State]): String = {
     // val turns = states
@@ -63,7 +65,7 @@ object Antike extends App {
       ${actives}:${idles}A
       ${marble.temples + iron.temples + gold.temples}T
       ${marble.cities + iron.cities + gold.cities}C
-      (${marble.amount + iron.amount + gold.amount + coins + fees})
+      (${balance(s)})
     """ split "\n" map (_.trim) mkString " "
   }
 }

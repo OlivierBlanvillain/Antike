@@ -1,4 +1,4 @@
-val scalaVersion = "2.11.4"
+val scalaVersion = "2.11.5"
 
 scalacOptions ++= Seq(
   "-deprecation",
